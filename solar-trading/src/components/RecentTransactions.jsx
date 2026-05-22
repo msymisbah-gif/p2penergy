@@ -3,18 +3,7 @@ import { collection, query, where, orderBy, limit, onSnapshot, or } from 'fireba
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { FaInbox, FaReceipt, FaArrowUp, FaArrowDown } from 'react-icons/fa';
-
-function formatTimestamp(ts) {
-  if (!ts) return '—';
-  const date = ts.toDate ? ts.toDate() : new Date(ts);
-  return new Intl.DateTimeFormat('ar-LY', {
-    year:   'numeric',
-    month:  'short',
-    day:    'numeric',
-    hour:   '2-digit',
-    minute: '2-digit',
-  }).format(date);
-}
+import { formatLYD, formatKwh, formatDateTime } from '../utils/format';
 
 function TransactionRow({ tx, isPurchase }) {
   const sign     = isPurchase ? '+' : '−';
@@ -43,20 +32,16 @@ function TransactionRow({ tx, isPurchase }) {
               {labelAction} <span className="text-gray-300">{counterparty || '—'}</span>
             </p>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{formatTimestamp(tx.timestamp)}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{formatDateTime(tx.timestamp)}</p>
         </div>
       </div>
 
       {/* Left side: amount */}
       <div className="text-left flex-shrink-0">
         <p className={`text-sm font-bold tabular-nums ${amountCls}`}>
-          {sign}{Number(tx.kwh ?? 0).toFixed(1)}
-          <span className="text-[10px] text-gray-500 mr-1 font-normal">kWh</span>
+          {sign}{formatKwh(tx.kwh)}
         </p>
-        <p className="text-xs text-gray-500 tabular-nums">
-          {Number(tx.total ?? 0).toFixed(2)}
-          <span className="mr-0.5">د.ل</span>
-        </p>
+        <p className="text-xs text-gray-500 tabular-nums">{formatLYD(tx.total)}</p>
       </div>
     </div>
   );

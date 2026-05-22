@@ -94,14 +94,21 @@ export async function executeEnergyTrade({ offerId, buyerUid, amount }) {
   });
 
   /* ---------- STEP 6: Update offer status to "completed" ---------- */
+  // If the buyer takes the full remaining amount, mark the offer
+  // completed; otherwise leave it 'open' with the reduced amount so
+  // other buyers can still pick up the rest.
   const remaining = Number(((offer.amount ?? 0) - amount).toFixed(3));
-  batch.update(offerRef, {
-    status:      remaining <= 0 ? 'completed' : 'partial',
-    amount:      remaining,
-    buyerUid,
-    buyerName:   buyer.name,
-    completedAt: serverTimestamp(),
-  });
+  if (remaining <= 0) {
+    batch.update(offerRef, {
+      status:      'completed',
+      amount:      0,
+      buyerUid,
+      buyerName:   buyer.name,
+      completedAt: serverTimestamp(),
+    });
+  } else {
+    batch.update(offerRef, { amount: remaining });
+  }
 
   /* ---------- STEP 7: Create immutable transaction document ------- */
   const paymentReference = generatePaymentReference();
