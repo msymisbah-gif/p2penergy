@@ -11,13 +11,22 @@
 # production
 /build
 
-# misc
-.DS_Store
+# ── SECURITY: NEVER commit these files ──────────────────────────────────────
+# .env holds your Firebase secret keys.
+# If this file reaches GitHub → hackers can steal your database instantly.
+# Copy .env.example → .env and fill in your real values locally.
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
+# Firebase Admin SDK service account key (for seed script only, never commit)
+scripts/serviceAccountKey.json
+# ─────────────────────────────────────────────────────────────────────────────
+
+# misc
+.DS_Store
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
