@@ -9,6 +9,7 @@ import SellEnergy         from './pages/SellEnergy';
 import BuyEnergy          from './pages/BuyEnergy';
 import TransactionHistory from './pages/TransactionHistory';
 import Profile            from './pages/Profile';
+import NotFound           from './pages/NotFound';
 
 export default function App() {
   return (
@@ -27,8 +28,11 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Root → dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

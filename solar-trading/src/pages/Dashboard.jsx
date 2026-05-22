@@ -45,7 +45,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-dark-700 bg-gradient-to-l from-dark-800 via-dark-850 to-dark-900 p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-dark-700 bg-gradient-to-l from-dark-800 via-dark-850 to-dark-900 p-4 sm:p-6">
         <div className="absolute -left-16 -top-16 w-56 h-56 rounded-full bg-solar-500/10 blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-20 w-48 h-48 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
 
@@ -55,7 +55,7 @@ export default function Dashboard() {
               <greeting.Icon className={`${greeting.cls} text-lg animate-pulse-glow`} />
               <span className={`text-sm font-semibold ${greeting.cls}`}>{greeting.text}</span>
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white leading-tight">
               أهلاً بك في <span className="text-gradient">{homeData.name}</span>
             </h1>
             <p className="text-gray-500 text-sm mt-2">
