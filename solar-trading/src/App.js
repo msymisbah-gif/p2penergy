@@ -4,7 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute    from './components/PrivateRoute';
 import Layout          from './components/Layout';
 import LoginPage       from './pages/LoginPage';
-import DashboardPage   from './pages/DashboardPage';
+import Dashboard       from './pages/Dashboard';
 import SellPage        from './pages/SellPage';
 import BuyPage         from './pages/BuyPage';
 import HistoryPage     from './pages/HistoryPage';
@@ -19,7 +19,7 @@ export default function App() {
 
           <Route element={<PrivateRoute />}>
             <Route element={<Layout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/sell"      element={<SellPage />} />
               <Route path="/buy"       element={<BuyPage />} />
               <Route path="/history"   element={<HistoryPage />} />
