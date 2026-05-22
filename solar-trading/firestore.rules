@@ -1,0 +1,82 @@
+rules_version = '2';
+
+// Firestore Security Rules — P2P Solar Energy Trading
+//
+// Design principles (per thesis Ch. 3):
+//   • Only authenticated homes can read/write the energy market.
+//   • Offers are mutable (status transitions: open → completed / cancelled).
+//   • Transactions are an IMMUTABLE LEDGER — create + read only.
+//     No updates or deletes are ever allowed.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ----------------------------------------------------------------
+     * Helpers
+     * ---------------------------------------------------------------- */
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthed() && request.auth.uid == uid;
+    }
+
+    /* ----------------------------------------------------------------
+     * /homes/{uid}
+     * Each home is owned by the authenticated user with matching uid.
+     * All authenticated users can read homes (needed for the market
+     * to show seller names, balances of counterparties, etc.).
+     * Updates are allowed because the atomic trade engine increments
+     * both seller and buyer balances in a single writeBatch.
+     * ---------------------------------------------------------------- */
+    match /homes/{uid} {
+      allow read:   if isAuthed();
+      allow create: if isOwner(uid);
+      allow update: if isAuthed();
+      allow delete: if false;
+
+      // Per-home daily statistics (production / consumption / surplus)
+      match /dailyStats/{statId} {
+        allow read:  if isAuthed();
+        allow write: if isOwner(uid);
+      }
+    }
+
+    /* ----------------------------------------------------------------
+     * /offers/{offerId}
+     * Sell offers placed on the market. Anyone authenticated can read.
+     * Only the seller can create their own offer. Anyone authenticated
+     * can update — required because executeEnergyTrade marks an offer
+     * "completed" from the BUYER's session. Deletes are forbidden;
+     * sellers must cancel via status change instead.
+     * ---------------------------------------------------------------- */
+    match /offers/{offerId} {
+      allow read:   if isAuthed();
+      allow create: if isAuthed()
+                    && request.resource.data.sellerUid == request.auth.uid
+                    && request.resource.data.status    == 'open';
+      allow update: if isAuthed();
+      allow delete: if false;
+    }
+
+    /* ----------------------------------------------------------------
+     * /transactions/{txId} — IMMUTABLE LEDGER
+     * Read-only history. Documents can be created (during trade) and
+     * read by the buyer or seller party. Once written, they can never
+     * be modified or removed — the audit trail is permanent.
+     * ---------------------------------------------------------------- */
+    match /transactions/{txId} {
+      allow read: if isAuthed() && (
+        resource.data.buyerUid  == request.auth.uid ||
+        resource.data.sellerUid == request.auth.uid
+      );
+      allow create: if isAuthed() && (
+        request.resource.data.buyerUid  == request.auth.uid ||
+        request.resource.data.sellerUid == request.auth.uid
+      );
+      allow update: if false;
+      allow delete: if false;
+    }
+  }
+}
