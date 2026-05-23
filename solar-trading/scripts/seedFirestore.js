@@ -53,6 +53,7 @@ const DEMO_USERS = [
     totalConsumed:  620.0,
     totalSold:      180.0,
     totalPurchased:  40.0,
+    isAdmin:        true,   // Admin account for the thesis demo
   },
   {
     email:          'home2@solar.ly',
@@ -115,7 +116,7 @@ async function seed() {
   let skipped = 0;
 
   for (const user of DEMO_USERS) {
-    const { email, password, name, ...stats } = user;
+    const { email, password, name, isAdmin = false, ...stats } = user;
 
     // 1) Create (or find existing) Firebase Auth user
     let authUser;
@@ -148,6 +149,7 @@ async function seed() {
       totalPurchased: stats.totalPurchased,
       joinedAt:       NOW,
       isActive:       true,
+      isAdmin,
     }, { merge: true });
   }
 

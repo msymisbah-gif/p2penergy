@@ -3,9 +3,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   FaSolarPanel, FaTachometerAlt, FaArrowUp, FaArrowDown,
-  FaHistory, FaUser, FaSignOutAlt, FaBolt, FaWallet,
+  FaHistory, FaUser, FaSignOutAlt, FaBolt, FaWallet, FaShieldAlt,
 } from 'react-icons/fa';
-import { formatLYD, formatKwh } from '../utils/format';
+import { formatLYD, formatKwh, getAvatarColor, getInitial } from '../utils/format';
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: FaTachometerAlt, label: 'الرئيسية',   short: 'الرئيسية'  },
@@ -43,7 +43,12 @@ export default function Layout() {
         {homeData && (
           <div className="mx-4 mt-4 p-4 bg-dark-900 rounded-xl border border-dark-700">
             <div className="flex items-center gap-2 mb-3">
-              <FaUser className="text-solar-400 text-xs flex-shrink-0" />
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: getAvatarColor(homeData.name ?? '') }}
+              >
+                {getInitial(homeData.name ?? '')}
+              </div>
               <span className="text-white font-semibold text-sm truncate">{homeData.name}</span>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -76,6 +81,15 @@ export default function Layout() {
               <span>{label}</span>
             </NavLink>
           ))}
+          {homeData?.isAdmin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''} !text-purple-400 hover:!text-purple-300 hover:!bg-purple-500/10`}
+            >
+              <FaShieldAlt className="text-base flex-shrink-0" />
+              <span>إدارة النظام</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="p-4 border-t border-dark-700">

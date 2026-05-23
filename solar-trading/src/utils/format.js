@@ -39,6 +39,24 @@ export function formatDate(ts) {
   return `${d.getDate()} ${AR_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+// Deterministic avatar background color from name string
+const AVATAR_PALETTE = [
+  '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6',
+  '#ef4444', '#06b6d4', '#f97316', '#ec4899',
+];
+
+/** Returns a hex color deterministically from a string (for avatars). */
+export function getAvatarColor(name = '') {
+  let h = 0;
+  for (const c of name) h = (h << 5) - h + c.charCodeAt(0);
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length];
+}
+
+/** First character of name, fallback '?'. */
+export function getInitial(name = '') {
+  return name.trim()[0] ?? '?';
+}
+
 /** Relative time "منذ 5 دقائق" (Western digits). */
 export function formatRelativeTime(ts) {
   if (!ts) return '—';

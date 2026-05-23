@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   doc, updateDoc, setDoc, increment, serverTimestamp, Timestamp,
 } from 'firebase/firestore';
@@ -7,14 +7,14 @@ import {
   FaUser, FaEnvelope, FaCalendarAlt, FaCheckCircle,
   FaSolarPanel, FaCog, FaSignOutAlt, FaSpinner, FaBolt,
   FaSun, FaChartLine, FaFlask, FaPhone, FaTachometerAlt,
-  FaEdit, FaSave, FaTimes,
+  FaEdit, FaSave, FaTimes, FaWallet, FaPlus, FaShieldAlt,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { simulateDay, SOLAR_CONSTANTS } from '../services/productionService';
-import { updateHomeProfile } from '../services/homeService';
+import { updateHomeProfile, topUpWallet } from '../services/homeService';
 import { isValidLibyanMobile } from '../utils/meter';
-import { formatLYD, formatKwh, formatDate } from '../utils/format';
+import { formatLYD, formatKwh, formatDate, getAvatarColor, getInitial } from '../utils/format';
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
@@ -45,9 +45,16 @@ export default function Profile() {
   const [toast, setToast] = useState(null);
 
   // Edit-profile state
+  // Edit-profile state
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [form, setForm] = useState({ name: '', mobile: '', meterRef: '' });
+
+  // Wallet top-up state
+  const QUICK_AMOUNTS = [50, 100, 200, 500];
+  const [selectedAmt, setSelectedAmt]   = useState(null);
+  const [customAmt, setCustomAmt]       = useState('');
+  const [topping, setTopping]           = useState(false);
 
   if (!homeData) return null;
 
@@ -142,18 +149,45 @@ export default function Profile() {
     }
   }
 
+  async function handleTopUp() {
+    const amt = selectedAmt ?? parseFloat(customAmt);
+    if (!amt || amt <= 0 || amt > 1000)
+      return showToast('أدخل مبلغاً بين 1 و 1000 د.ل.', true);
+    setTopping(true);
+    try {
+      await topUpWallet(currentUser.uid, amt);
+      setSelectedAmt(null);
+      setCustomAmt('');
+      showToast(`تم شحن المحفظة بـ ${formatLYD(amt)} بنجاح!`);
+    } catch (err) {
+      showToast(err.message || 'فشل الشحن. حاول مجدداً.', true);
+    } finally {
+      setTopping(false);
+    }
+  }
+
   const joinedAt = homeData.joinedAt ? formatDate(homeData.joinedAt) : '—';
+  const avatarColor   = getAvatarColor(homeData.name ?? '');
+  const avatarInitial = getInitial(homeData.name ?? '');
 
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-solar-500/10 border border-solar-500/20 flex items-center justify-center">
-          <FaUser className="text-solar-400" />
+      <div className="flex items-center gap-4">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white flex-shrink-0 shadow-lg"
+          style={{ backgroundColor: avatarColor }}
+        >
+          {avatarInitial}
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-white">الملف الشخصي</h1>
-          <p className="text-gray-500 text-sm">بيانات المنزل ومحاكاة الإنتاج</p>
+          <h1 className="text-2xl font-bold text-white">{homeData.name}</h1>
+          <p className="text-gray-500 text-sm">{currentUser?.email}</p>
+          {homeData.isAdmin && (
+            <span className="inline-flex items-center gap-1 text-xs bg-purple-500/15 text-purple-400 border border-purple-500/30 rounded-full px-2 py-0.5 mt-1">
+              <FaShieldAlt className="text-[10px]" /> مدير النظام
+            </span>
+          )}
         </div>
       </div>
 
@@ -293,6 +327,87 @@ export default function Profile() {
           <SpecRow label="الموقع الجغرافي" value="أجدابيا، ليبيا" />
         </div>
       </div>
+
+      {/* Wallet Top-Up */}
+      <div className="card border-green-500/20 bg-gradient-to-br from-dark-800 to-green-500/5">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-11 h-11 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center flex-shrink-0">
+            <FaWallet className="text-green-400" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-white">شحن المحفظة</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              رصيدك الحالي: <span className="text-amber-400 font-bold">{formatLYD(homeData.walletBalance)}</span>
+              {' '}— أضف رصيداً افتراضياً لشراء الطاقة
+            </p>
+          </div>
+        </div>
+
+        {/* Quick-pick amounts */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {QUICK_AMOUNTS.map((amt) => (
+            <button
+              key={amt}
+              onClick={() => { setSelectedAmt(amt); setCustomAmt(''); }}
+              disabled={topping}
+              className={`py-2 rounded-xl text-sm font-semibold border transition-all
+                ${selectedAmt === amt
+                  ? 'bg-green-500/30 border-green-400 text-green-300'
+                  : 'bg-dark-900 border-dark-700 text-gray-300 hover:border-green-500/40 hover:text-green-300'}`}
+            >
+              {amt}
+            </button>
+          ))}
+        </div>
+
+        {/* Custom amount */}
+        <div className="relative mb-4">
+          <input
+            type="number"
+            value={customAmt}
+            onChange={(e) => { setCustomAmt(e.target.value); setSelectedAmt(null); }}
+            placeholder="مبلغ مخصص (أقصاه 1000 د.ل)"
+            className="input-field pl-16"
+            dir="ltr"
+            min="1"
+            max="1000"
+            disabled={topping}
+          />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+            د.ل
+          </span>
+        </div>
+
+        <button
+          onClick={handleTopUp}
+          disabled={topping || (!selectedAmt && !customAmt)}
+          className="w-full flex items-center justify-center gap-2 bg-green-500/20 hover:bg-green-500/30
+                     border border-green-500/40 hover:border-green-400 text-green-300 hover:text-green-200
+                     font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 active:scale-95
+                     disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          {topping
+            ? <><FaSpinner className="animate-spin" /><span>جارٍ الشحن...</span></>
+            : <><FaPlus /><span>شحن المحفظة</span></>}
+        </button>
+      </div>
+
+      {/* Admin Panel Link (visible to admin users on mobile) */}
+      {homeData.isAdmin && (
+        <Link
+          to="/admin"
+          className="card border-purple-500/20 bg-gradient-to-br from-dark-800 to-purple-500/5
+                     flex items-center gap-4 hover:border-purple-400/40 transition-all duration-200 group"
+        >
+          <div className="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 group-hover:bg-purple-500/20 transition-colors">
+            <FaShieldAlt className="text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-base font-semibold text-white">لوحة الإدارة</h2>
+            <p className="text-xs text-gray-500">عرض جميع المنازل والإحصائيات الكاملة</p>
+          </div>
+        </Link>
+      )}
 
       {/* Simulate Production */}
       <div className="card border-solar-500/30 bg-gradient-to-br from-dark-800 to-solar-500/5">

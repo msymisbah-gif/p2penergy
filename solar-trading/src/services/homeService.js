@@ -3,7 +3,7 @@
  */
 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, serverTimestamp, increment } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { generateMeterRef, normalizeMobile } from '../utils/meter';
 
@@ -38,6 +38,17 @@ export async function registerHome({ name, email, mobile, password }) {
   });
 
   return { uid, meterRef };
+}
+
+/**
+ * Add LYD credit to the user's wallet (virtual top-up for demo purposes).
+ */
+export async function topUpWallet(uid, amount) {
+  if (!amount || amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر.');
+  await updateDoc(doc(db, 'homes', uid), {
+    walletBalance: increment(amount),
+    updatedAt:     serverTimestamp(),
+  });
 }
 
 /**

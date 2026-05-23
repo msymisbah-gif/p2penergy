@@ -10,6 +10,7 @@ import SellEnergy         from './pages/SellEnergy';
 import BuyEnergy          from './pages/BuyEnergy';
 import TransactionHistory from './pages/TransactionHistory';
 import Profile            from './pages/Profile';
+import AdminPage          from './pages/AdminPage';
 import NotFound           from './pages/NotFound';
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
               <Route path="/buy"       element={<BuyEnergy />} />
               <Route path="/history"   element={<TransactionHistory />} />
               <Route path="/profile"   element={<Profile />} />
+              <Route path="/admin"     element={<AdminPage />} />
             </Route>
           </Route>
 
