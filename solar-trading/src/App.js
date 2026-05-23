@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute       from './components/PrivateRoute';
 import Layout             from './components/Layout';
 import LoginPage          from './pages/LoginPage';
+import RegisterPage       from './pages/RegisterPage';
 import Dashboard          from './pages/Dashboard';
 import SellEnergy         from './pages/SellEnergy';
 import BuyEnergy          from './pages/BuyEnergy';
@@ -16,7 +17,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           <Route element={<PrivateRoute />}>
             <Route element={<Layout />}>

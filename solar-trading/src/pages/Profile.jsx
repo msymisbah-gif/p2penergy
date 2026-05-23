@@ -6,11 +6,14 @@ import {
 import {
   FaUser, FaEnvelope, FaCalendarAlt, FaCheckCircle,
   FaSolarPanel, FaCog, FaSignOutAlt, FaSpinner, FaBolt,
-  FaSun, FaChartLine, FaFlask,
+  FaSun, FaChartLine, FaFlask, FaPhone, FaTachometerAlt,
+  FaEdit, FaSave, FaTimes,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { simulateDay, SOLAR_CONSTANTS } from '../services/productionService';
+import { updateHomeProfile } from '../services/homeService';
+import { isValidLibyanMobile } from '../utils/meter';
 import { formatLYD, formatKwh, formatDate } from '../utils/format';
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -41,7 +44,43 @@ export default function Profile() {
   const [signingOut, setSigningOut] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Edit-profile state
+  const [editing, setEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [form, setForm] = useState({ name: '', mobile: '', meterRef: '' });
+
   if (!homeData) return null;
+
+  function startEditing() {
+    setForm({
+      name:     homeData.name     ?? '',
+      mobile:   homeData.mobile   ?? '',
+      meterRef: homeData.meterRef ?? '',
+    });
+    setEditing(true);
+  }
+
+  async function handleSaveProfile() {
+    if (!form.name.trim()) return showToast('اسم المنزل مطلوب.', true);
+    if (form.mobile && !isValidLibyanMobile(form.mobile))
+      return showToast('رقم الهاتف غير صالح. استخدم صيغة مثل 0912345678.', true);
+    if (!form.meterRef.trim()) return showToast('الرقم المرجعي للعداد مطلوب.', true);
+
+    setSavingEdit(true);
+    try {
+      await updateHomeProfile(currentUser.uid, {
+        name:     form.name,
+        mobile:   form.mobile,
+        meterRef: form.meterRef,
+      });
+      setEditing(false);
+      showToast('تم تحديث بيانات الملف الشخصي بنجاح.');
+    } catch (err) {
+      showToast(err.message || 'فشل التحديث. حاول مجدداً.', true);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   function showToast(msg, isError = false) {
     setToast({ msg, isError });
@@ -120,22 +159,100 @@ export default function Profile() {
 
       {/* Account Info */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-white mb-1">معلومات الحساب</h2>
-        <p className="text-xs text-gray-500 mb-4">البيانات الأساسية لمنزلك في الشبكة</p>
-        <div className="divide-y divide-dark-700">
-          <InfoRow icon={FaUser}        label="اسم المنزل"        value={homeData.name} />
-          <InfoRow icon={FaEnvelope}    label="البريد الإلكتروني" value={currentUser?.email ?? '—'} />
-          <InfoRow icon={FaCalendarAlt} label="تاريخ الانضمام"   value={joinedAt} />
-          <InfoRow
-            icon={FaCheckCircle}
-            label="حالة الحساب"
-            value={
-              <span className={homeData.isActive ? 'text-green-400' : 'text-red-400'}>
-                {homeData.isActive ? 'نشط ✓' : 'غير نشط'}
-              </span>
-            }
-          />
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-lg font-semibold text-white">معلومات الحساب</h2>
+          {!editing && (
+            <button
+              onClick={startEditing}
+              className="flex items-center gap-1.5 text-solar-400 hover:text-solar-300
+                         border border-solar-500/20 hover:border-solar-500/40 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+            >
+              <FaEdit className="text-xs" />
+              <span>تعديل</span>
+            </button>
+          )}
         </div>
+        <p className="text-xs text-gray-500 mb-4">البيانات الأساسية لمنزلك في الشبكة</p>
+
+        {!editing ? (
+          <div className="divide-y divide-dark-700">
+            <InfoRow icon={FaUser}          label="اسم المنزل"          value={homeData.name} />
+            <InfoRow icon={FaEnvelope}      label="البريد الإلكتروني"   value={currentUser?.email ?? '—'} />
+            <InfoRow icon={FaPhone}         label="رقم الهاتف"          value={homeData.mobile || '—'} />
+            <InfoRow icon={FaTachometerAlt} label="الرقم المرجعي للعداد" value={homeData.meterRef || '—'} />
+            <InfoRow icon={FaCalendarAlt}   label="تاريخ الانضمام"      value={joinedAt} />
+            <InfoRow
+              icon={FaCheckCircle}
+              label="حالة الحساب"
+              value={
+                <span className={homeData.isActive ? 'text-green-400' : 'text-red-400'}>
+                  {homeData.isActive ? 'نشط ✓' : 'غير نشط'}
+                </span>
+              }
+            />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1.5 text-right">اسم المنزل</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="input-field"
+                disabled={savingEdit}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1.5 text-right">رقم الهاتف</label>
+              <input
+                type="tel"
+                value={form.mobile}
+                onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+                placeholder="0912345678"
+                className="input-field"
+                dir="ltr"
+                disabled={savingEdit}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1.5 text-right">الرقم المرجعي للعداد</label>
+              <input
+                type="text"
+                value={form.meterRef}
+                onChange={(e) => setForm({ ...form, meterRef: e.target.value })}
+                placeholder="MTR-AJ-04821"
+                className="input-field"
+                dir="ltr"
+                disabled={savingEdit}
+              />
+            </div>
+            {/* Read-only email note */}
+            <p className="text-xs text-gray-600 text-right">
+              لا يمكن تغيير البريد الإلكتروني ({currentUser?.email}).
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingEdit}
+                className="btn-primary flex-1 flex items-center justify-center gap-2"
+              >
+                {savingEdit
+                  ? <><FaSpinner className="animate-spin" /><span>جارٍ الحفظ...</span></>
+                  : <><FaSave /><span>حفظ التغييرات</span></>}
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                disabled={savingEdit}
+                className="btn-secondary flex items-center justify-center gap-2"
+              >
+                <FaTimes />
+                <span>إلغاء</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats */}

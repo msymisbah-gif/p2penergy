@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-import { FaSolarPanel, FaEnvelope, FaLock, FaSpinner } from 'react-icons/fa';
+import { FaSolarPanel, FaEnvelope, FaLock, FaSpinner, FaUserPlus } from 'react-icons/fa';
 
 const ARABIC_ERRORS = {
   'auth/invalid-email':           'البريد الإلكتروني غير صالح.',
@@ -140,7 +140,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-gray-600 mt-6">
+          {/* Create account link */}
+          <Link
+            to="/register"
+            className="mt-6 w-full flex items-center justify-center gap-2 bg-dark-900 hover:bg-dark-700
+                       border border-dark-700 hover:border-solar-500/30 text-gray-300 hover:text-white
+                       font-medium py-2.5 px-5 rounded-xl transition-all duration-200"
+          >
+            <FaUserPlus className="text-solar-400" />
+            <span>إنشاء حساب منزل جديد</span>
+          </Link>
+
+          <p className="text-center text-xs text-gray-600 mt-4">
             للوصول التجريبي: استخدم بيانات الحسابات التجريبية
           </p>
         </div>
