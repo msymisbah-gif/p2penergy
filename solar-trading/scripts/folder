@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "p2p-solar-trading-goea",
+  "private_key_id": "1a7e842e8aa1a798bc1a5526e1011344f2dd3e69",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDuz19uA2idDNPG\nitxoB5JmDZ0WOIbY9a1Hq5HnmujKVHOpWPHZ7Jp8YrKF7vwBPMZQlL2GRU2A2LGz\nVxn/hDAaqxh0vdbZ5kBnN5Bg0BXtEMcv3bDgiCKVu46rmKhAM+gqIDxLVYyjWOtB\nS9l+ugrtDHG7RSPYiWD3hYyVV/x1+XMScmrx3ckd297xXSqSpRMlFl3eBJKFVv7E\n4uYycQniHT5PI4R9keuYoPPe2aZVSOEAyTxUD8fKTe1nU+V71WlGDJFlK+GLL5fX\nBiC4et7T/DgBARLe9uSRvnAxABP+LXzksu/ofTLmO/oAA2M+QE/812OVsSMcOY2U\nbJyyodEhAgMBAAECggEABjbs3NuTacOaSN5PCLkieHPYDcKTIgcP6yukG4fPwTjq\nFP8DxXIBhc1R1+/bhI7ZynHZ9iIkX4cYFf6lLlXI1I9Vdr+EVWmfPT5kNDxDB08k\nj1aamFe7lmvd7UHO5lORegPqbMOTUjKFlf6SyIgv8cn1NVhZ68wMqylRUpc6anGa\nXDq54EySQZyVOpzz+fsDoImS1ertngZ26bUalFqOxRCPoxTwgSqPMhxXgl0gSJn7\n/t5GvpPqI2Oobbsi1RTqLfq7Gs/CuZTqt4zdBrF9zw9MOPnxs3GfGDp43tGwdgpu\nDlnyScQKtfyrtdv8ucbG00LEgvrZupFcCIeEBEl5AQKBgQD41QLXfRCgsFpe9DmX\nXMa6sOHa6vQb+rm9HjzrsO0Acv5M6hnnlnnWbM0LXE6Sy/Pkq2cUsv18C58XOvib\nG4Jc/6v84neyNX5l/4V+eRbroggAluZyrVvnoqynv16nEHXMqKygmbYBCtWqsunO\nPT7E7mi/TqP2JdQJ9lZKJmhKIQKBgQD1sHSHF5zUapWMgw/Z04I6+CCCob4ezW+5\nCxlin9qepgiBN2TfldEGGjB+8ODnsx1naxWcv1E5KBLNIJixYHhijL5C6ZylTb5S\nVJptJhJTPtjXQRmoAulqv8RRh+EhncBOEMjYGzWoM46yLbZatZsavml/SoBKCMHS\nuJGZVB6nAQKBgDEU2yWkLqZzgq/eHooDq9NhVnt3AsWOFBsAnuWilW0UQaLsPkXX\nAZtRBLTr9TexcR82y/NiRuuz4yKS6Dy4FWPArq0IArItKQx3dV54BhRedpOfMD+I\ngGtVRBcmgUYU0heXYc2f5C2adIDiH4olvH7dw92QZnkEByob4/NmVgXhAoGBAKtF\nRRZfmY5idrorK0OYNHLTQiaOhjCG2dlPKXUdJpPt/oPFj+ZlU/9DBoeXd9FNhbPw\nbHKG1CJaEzE4Bfmw3HsmzgNrQy3hEknmfHiWT7QEXblAwpfi38DwyfRkGscKZ2KE\nRN6RqUgGGPWQ9EwryWJNVtHLp770d9ljnOwcPfoBAoGBAKDYWN6JxZ9AvOI6OPXU\nlCHG605K2C+kgk8guz/c7iTpxUNLWNRUhUpvx8NRu1ePxVY2DTvTDatzA2u/ZnTr\nz/vC9N0be2omcm3vu3MJLtnyHet9Vi3z+atFRTh4typeeZmfEF2plaVIz6u+SdnJ\ntGCf0LwhzSH9H2FdMrmIOZ3O\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@p2p-solar-trading-goea.iam.gserviceaccount.com",
+  "client_id": "104483968029098212638",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40p2p-solar-trading-goea.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
