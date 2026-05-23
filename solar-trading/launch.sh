@@ -50,10 +50,19 @@ echo ""
 echo "🌱  إنشاء المستخدمين التجريبيين في Firebase..."
 node scripts/seedFirestore.js
 
-# ── Step 5: Deploy Firestore security rules ────────────────────
+# ── Step 5: Deploy Firestore security rules (optional) ─────────
 echo ""
-echo "🔒  نشر قواعد أمان Firestore..."
-npx firebase-tools deploy --only firestore:rules --project p2p-solar-trading-goea
+echo "🔒  محاولة نشر قواعد أمان Firestore..."
+if npx firebase-tools deploy --only firestore:rules --project p2p-solar-trading-goea; then
+  echo "✅  تم نشر القواعد"
+else
+  echo ""
+  echo "⚠️   لم يتم نشر القواعد تلقائياً (تحتاج firebase login)."
+  echo "    لا مشكلة — يمكنك نشرها يدوياً من Firebase Console:"
+  echo "    Firestore Database → Rules → الصق محتوى firestore.rules → Publish"
+  echo "    التطبيق سيكمل التشغيل الآن..."
+  echo ""
+fi
 
 # ── Step 6: Build & start ─────────────────────────────────────
 echo ""
