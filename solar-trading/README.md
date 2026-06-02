@@ -1,70 +1,222 @@
-# Getting Started with Create React App
+# نظام محاكاة تداول فائض الطاقة الشمسية — P2P Solar Energy Trading
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> Graduation thesis project — Department of Computer Engineering, Ajdabiya University, Libya.
 
-## Available Scripts
+A full-stack web simulation platform that lets virtual homes **sell and buy surplus solar energy** on a peer-to-peer market using digital wallets priced in Libyan Dinar (د.ل). Built entirely with React and Firebase — no backend server required.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+| Module | Description |
+|--------|-------------|
+| **Dashboard** | Real-time energy balance, wallet balance, live buy offers, area chart of daily stats |
+| **Sell Energy** | Post a sell offer with kWh amount and LYD price per unit |
+| **Buy Energy** | Browse open offers, buy partial or full amounts atomically |
+| **Transaction History** | Immutable ledger of all trades (buyer + seller views) |
+| **Profile** | Edit name / mobile / meter reference, view system specs |
+| **Wallet Top-Up** | Add virtual LYD credit with quick-pick (50/100/200/500) or custom amount |
+| **Solar Simulation** | One-click daily production model (PV formula, Ajdabiya climate) |
+| **Admin Dashboard** | See all homes, balances, and network-wide trading statistics |
+| **Self Registration** | Any user can create a new home account with auto-generated meter code |
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Layer | Technology |
+|-------|-----------|
+| UI | React 19, React Router v7, Tailwind CSS v3, Recharts |
+| Icons | React Icons (Font Awesome) |
+| Backend | Firebase Auth (email/password) |
+| Database | Cloud Firestore (real-time `onSnapshot`) |
+| Atomic trades | Firestore `writeBatch` (8-step all-or-nothing) |
+| Seed / Admin | Firebase Admin SDK (`scripts/seedFirestore.js`) |
+| Deployment | Firebase Hosting or Vercel |
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Solar Production Model
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Each home runs a mathematical PV simulation:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+P(t) = P_peak × η × I(t) / I_STC
+```
 
-### `npm run eject`
+| Constant | Value | Description |
+|----------|-------|-------------|
+| `P_peak` | 3.0 kWp | Installed panel capacity per home |
+| `η` | 80% | System efficiency |
+| `I_STC` | 1.0 kW/m² | Standard test condition irradiance |
+| Sunrise | 06:00 | Ajdabiya, Libya (lat ≈ 30.75°N) |
+| Sunset | 18:00 | |
+| Seasonal swing | ±20% | Peaks on summer solstice (DOY 172) |
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Daily consumption is randomised between 5–15 kWh/day. Surplus = production − consumption and is added to the home's kWh balance.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Project Structure
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+solar-trading/
+├── public/
+├── scripts/
+│   └── seedFirestore.js       # One-time demo data seed (firebase-admin)
+├── src/
+│   ├── components/
+│   │   ├── Layout.jsx          # Sidebar (desktop) + bottom nav (mobile)
+│   │   ├── EnergyChart.jsx     # Recharts area chart
+│   │   ├── StatsCard.jsx       # Reusable stat widget
+│   │   └── ...
+│   ├── context/
+│   │   └── AuthContext.jsx     # Firebase Auth + Firestore onSnapshot
+│   ├── hooks/
+│   │   ├── useBalance.js
+│   │   └── useOffers.js
+│   ├── pages/
+│   │   ├── Dashboard.jsx
+│   │   ├── SellEnergy.jsx
+│   │   ├── BuyEnergy.jsx
+│   │   ├── TransactionHistory.jsx
+│   │   ├── Profile.jsx
+│   │   ├── AdminPage.jsx       # isAdmin-protected
+│   │   ├── LoginPage.jsx
+│   │   └── RegisterPage.jsx
+│   ├── services/
+│   │   ├── tradeService.js     # Atomic 8-step energy trade engine
+│   │   ├── homeService.js      # Registration, profile update, wallet top-up
+│   │   └── productionService.js # PV simulation model
+│   └── utils/
+│       ├── format.js           # LYD/kWh formatters, avatar color, date helpers
+│       └── meter.js            # Meter code generator, Libyan mobile validator
+├── firestore.rules
+├── firebase.json
+├── vercel.json
+├── launch.sh                   # One-command local setup script
+└── .env                        # Firebase config — NEVER commit this file
+```
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Local Setup
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Prerequisites
+- Node.js 18+
+- A Firebase project (Spark plan is enough)
 
-### Code Splitting
+### 1 — Clone and enter the app folder
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+git clone https://github.com/msymisbah-gif/p2penergy.git
+cd p2penergy/solar-trading
+```
 
-### Analyzing the Bundle Size
+### 2 — Install dependencies
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+npm install
+```
 
-### Making a Progressive Web App
+### 3 — Create `.env` with your Firebase config
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+# solar-trading/.env
+REACT_APP_FIREBASE_API_KEY=...
+REACT_APP_FIREBASE_AUTH_DOMAIN=...
+REACT_APP_FIREBASE_PROJECT_ID=...
+REACT_APP_FIREBASE_STORAGE_BUCKET=...
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=...
+REACT_APP_FIREBASE_APP_ID=...
+```
 
-### Advanced Configuration
+> **Security:** `.env` is listed in `.gitignore` and must **never** be committed to GitHub.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 4 — (Optional) Seed demo data
 
-### Deployment
+Download a service account key from Firebase Console → Project Settings → Service Accounts, save it as `scripts/serviceAccountKey.json`, then run:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```bash
+node scripts/seedFirestore.js
+```
 
-### `npm run build` fails to minify
+This creates 5 demo homes in Firebase Auth + Firestore. Safe to re-run — existing users are skipped.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+> `scripts/serviceAccountKey.json` is also in `.gitignore` — never commit it.
+
+### 5 — Start the app
+
+```bash
+npm start
+```
+
+Opens at http://localhost:3000
+
+---
+
+## Demo Accounts
+
+All five demo homes share the password **`Solar@2024`**.
+
+| Email | Home Name | Role |
+|-------|-----------|------|
+| `home1@solar.ly` | منزل الشمس — أجدابيا | **Admin** |
+| `home2@solar.ly` | منزل النور — بنغازي | User |
+| `home3@solar.ly` | منزل الأمل — طبرق | User |
+| `home4@solar.ly` | منزل الفجر — درنة | User |
+| `home5@solar.ly` | منزل السلام — الكفرة | User |
+
+`home1@solar.ly` has `isAdmin: true` — it can access the admin dashboard at `/admin`.
+
+---
+
+## Firestore Security Rules
+
+| Collection | Read | Create | Update | Delete |
+|------------|------|--------|--------|--------|
+| `/homes/{uid}` | Any auth user | Owner only | Any auth user* | Never |
+| `/homes/{uid}/dailyStats` | Any auth user | Owner only | Owner only | Never |
+| `/offers/{offerId}` | Any auth user | Auth (own UID) | Any auth user* | Never |
+| `/transactions/{txId}` | Buyer or seller | Buyer or seller | Never | Never |
+
+\* Required for the atomic trade engine — the buyer's session must update the seller's home balance and mark the offer complete within a single `writeBatch`.
+
+Transactions form an **immutable audit ledger** — once written they can never be modified or deleted.
+
+---
+
+## Deployment
+
+### Firebase Hosting
+
+```bash
+npm run build
+firebase deploy --only hosting
+```
+
+### Vercel
+
+Push to GitHub — Vercel auto-deploys. The `vercel.json` file already configures SPA rewrites so deep links work.
+
+---
+
+## Acceptance Tests Covered
+
+1. User registration with Libyan mobile number validation
+2. Solar production simulation (PV formula, seasonal factors)
+3. Posting a sell offer with price in د.ل
+4. Buying energy (partial and full fill)
+5. Atomic trade — all-or-nothing Firestore batch
+6. Real-time balance update after trade
+7. Transaction history (immutable ledger)
+8. Wallet top-up (virtual LYD credit)
+9. Profile editing (name, mobile, meter reference)
+10. Admin view of all homes and network stats
+
+---
+
+## Author
+
+Graduation Project — Computer Engineering Department, Ajdabiya University, Libya  
+Academic Year 2025–2026
