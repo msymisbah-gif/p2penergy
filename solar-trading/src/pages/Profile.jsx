@@ -8,7 +8,7 @@ import {
   FaSolarPanel, FaCog, FaSignOutAlt, FaSpinner, FaBolt,
   FaSun, FaChartLine, FaFlask, FaPhone, FaTachometerAlt,
   FaEdit, FaSave, FaTimes, FaWallet, FaPlus, FaShieldAlt,
-  FaCreditCard,
+  FaCreditCard, FaMapMarkerAlt,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -16,6 +16,8 @@ import { simulateDay, SOLAR_CONSTANTS } from '../services/productionService';
 import { updateHomeProfile, topUpWallet } from '../services/homeService';
 import { isValidLibyanMobile } from '../utils/meter';
 import { PAYMENT_METHODS, getPaymentMethod } from '../utils/paymentMethods';
+import { formatLocation } from '../utils/locations';
+import LocationPicker from '../components/LocationPicker';
 import { formatLYD, formatKwh, formatDate, getAvatarColor, getInitial } from '../utils/format';
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -50,7 +52,10 @@ export default function Profile() {
   // Edit-profile state
   const [editing, setEditing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
-  const [form, setForm] = useState({ name: '', mobile: '', meterRef: '' });
+  const [form, setForm] = useState({
+    name: '', mobile: '', meterRef: '',
+    city: 'ajdabiya', neighborhood: '', street: '',
+  });
 
   // Wallet top-up state
   const QUICK_AMOUNTS = [50, 100, 200, 500];
@@ -63,9 +68,12 @@ export default function Profile() {
 
   function startEditing() {
     setForm({
-      name:     homeData.name     ?? '',
-      mobile:   homeData.mobile   ?? '',
-      meterRef: homeData.meterRef ?? '',
+      name:         homeData.name         ?? '',
+      mobile:       homeData.mobile       ?? '',
+      meterRef:     homeData.meterRef     ?? '',
+      city:         homeData.city         ?? 'ajdabiya',
+      neighborhood: homeData.neighborhood ?? '',
+      street:       homeData.street       ?? '',
     });
     setEditing(true);
   }
@@ -79,9 +87,12 @@ export default function Profile() {
     setSavingEdit(true);
     try {
       await updateHomeProfile(currentUser.uid, {
-        name:     form.name,
-        mobile:   form.mobile,
-        meterRef: form.meterRef,
+        name:         form.name,
+        mobile:       form.mobile,
+        meterRef:     form.meterRef,
+        city:         form.city,
+        neighborhood: form.neighborhood,
+        street:       form.street,
       });
       setEditing(false);
       showToast('تم تحديث بيانات الملف الشخصي بنجاح.');
@@ -228,6 +239,18 @@ export default function Profile() {
                 </span>
               }
             />
+            <InfoRow
+              icon={FaMapMarkerAlt}
+              label="الموقع"
+              value={
+                <span className="text-right">
+                  <div>{formatLocation(homeData.city, homeData.neighborhood)}</div>
+                  {homeData.street && (
+                    <div className="text-xs text-gray-500 mt-0.5">{homeData.street}</div>
+                  )}
+                </span>
+              }
+            />
             <InfoRow icon={FaCalendarAlt}   label="تاريخ الانضمام"      value={joinedAt} />
             <InfoRow
               icon={FaCheckCircle}
@@ -272,6 +295,23 @@ export default function Profile() {
                 placeholder="MTR-AJ-04821"
                 className="input-field"
                 dir="ltr"
+                disabled={savingEdit}
+              />
+            </div>
+
+            {/* Location editor */}
+            <div className="pt-3 border-t border-dark-700">
+              <p className="text-sm font-semibold text-solar-400 mb-3 text-right flex items-center gap-1.5 justify-end">
+                <span>موقع المنزل</span>
+                <FaMapMarkerAlt className="text-xs" />
+              </p>
+              <LocationPicker
+                city={form.city}
+                neighborhood={form.neighborhood}
+                street={form.street}
+                onCityChange={(v)         => setForm({ ...form, city: v, neighborhood: '' })}
+                onNeighborhoodChange={(v) => setForm({ ...form, neighborhood: v })}
+                onStreetChange={(v)       => setForm({ ...form, street: v })}
                 disabled={savingEdit}
               />
             </div>

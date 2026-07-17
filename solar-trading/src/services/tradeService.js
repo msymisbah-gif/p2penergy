@@ -163,7 +163,10 @@ export async function createSellOffer({ sellerUid, amount, pricePerKwh }) {
 
   const offerRef = await addDoc(collection(db, 'offers'), {
     sellerUid,
-    sellerName: seller.name,
+    sellerName:         seller.name,
+    sellerCity:         seller.city         ?? 'ajdabiya',
+    sellerNeighborhood: seller.neighborhood ?? '',
+    sellerStreet:       seller.street       ?? '',
     amount,
     pricePerKwh,
     status:     'open',

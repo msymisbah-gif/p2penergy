@@ -53,6 +53,9 @@ const DEMO_USERS = [
     totalConsumed:  620.0,
     totalSold:      180.0,
     totalPurchased:  40.0,
+    city:           'ajdabiya',
+    neighborhood:   'حي النصر',
+    street:         'شارع الجامعة',
     isAdmin:        true,   // Admin account for the thesis demo
   },
   {
@@ -67,6 +70,9 @@ const DEMO_USERS = [
     totalConsumed:  500.0,
     totalSold:       90.0,
     totalPurchased:  60.0,
+    city:           'benghazi',
+    neighborhood:   'الفويهات',
+    street:         '',
   },
   {
     email:          'home3@solar.ly',
@@ -80,6 +86,9 @@ const DEMO_USERS = [
     totalConsumed:  400.0,
     totalSold:      300.0,
     totalPurchased:  20.0,
+    city:           'tobruk',
+    neighborhood:   'وسط طبرق',
+    street:         '',
   },
   {
     email:          'home4@solar.ly',
@@ -93,6 +102,9 @@ const DEMO_USERS = [
     totalConsumed:  400.0,
     totalSold:       20.0,
     totalPurchased: 120.0,
+    city:           'derna',
+    neighborhood:   'وسط درنة',
+    street:         '',
   },
   {
     email:          'home5@solar.ly',
@@ -106,6 +118,9 @@ const DEMO_USERS = [
     totalConsumed:  450.0,
     totalSold:       70.0,
     totalPurchased:  50.0,
+    city:           'alkufra',
+    neighborhood:   'الجوف',
+    street:         '',
   },
 ];
 
@@ -147,6 +162,9 @@ async function seed() {
       totalConsumed:  stats.totalConsumed,
       totalSold:      stats.totalSold,
       totalPurchased: stats.totalPurchased,
+      city:           stats.city         ?? 'ajdabiya',
+      neighborhood:   stats.neighborhood ?? '',
+      street:         stats.street       ?? '',
       joinedAt:       NOW,
       isActive:       true,
       isAdmin,

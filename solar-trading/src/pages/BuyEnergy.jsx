@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import {
   FaArrowDown, FaBolt, FaShoppingCart, FaSearch,
-  FaUser, FaWallet, FaInbox,
+  FaUser, FaWallet, FaInbox, FaMapMarkerAlt, FaFilter, FaTimes,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useOffers } from '../hooks/useOffers';
 import { executeEnergyTrade } from '../services/tradeService';
 import PaymentModal from '../components/PaymentModal';
 import { formatLYD, formatKwh, formatRelativeTime } from '../utils/format';
+import { LIBYAN_CITIES, getCity, getCityNeighborhoods, formatLocation } from '../utils/locations';
 
 function OfferCard({ offer, walletBalance, onBuy }) {
   const [amount, setAmount] = useState(offer.amount);
@@ -20,7 +21,7 @@ function OfferCard({ offer, walletBalance, onBuy }) {
   return (
     <div className="card hover:border-solar-500/30 hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
       {/* Seller */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-3">
         <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
           <FaUser className="text-blue-400" />
         </div>
@@ -29,6 +30,17 @@ function OfferCard({ offer, walletBalance, onBuy }) {
           <p className="text-xs text-gray-500">{formatRelativeTime(offer.createdAt)}</p>
         </div>
       </div>
+
+      {/* Location badge */}
+      {(offer.sellerCity || offer.sellerNeighborhood) && (
+        <div className="flex items-center gap-1.5 mb-4 bg-solar-500/5 border border-solar-500/15 rounded-lg px-2.5 py-1.5">
+          <FaMapMarkerAlt className="text-solar-400 text-xs flex-shrink-0" />
+          <p className="text-xs text-gray-300 truncate">
+            {formatLocation(offer.sellerCity, offer.sellerNeighborhood)}
+            {offer.sellerStreet && <span className="text-gray-500"> • {offer.sellerStreet}</span>}
+          </p>
+        </div>
+      )}
 
       {/* Energy + Price summary */}
       <div className="grid grid-cols-2 gap-2 mb-4">
@@ -95,19 +107,32 @@ export default function BuyEnergy() {
   const { currentUser, homeData } = useAuth();
   const { offers, loading }       = useOffers({ excludeUid: currentUser?.uid });
 
-  const [search, setSearch]   = useState('');
-  const [modal, setModal]     = useState({ open: false, offer: null, amount: 0 });
-  const [toast, setToast]     = useState(null);
+  const [search, setSearch]                 = useState('');
+  const [filterCity, setFilterCity]         = useState('all');
+  const [filterNeighborhood, setFilterNeighborhood] = useState('');
+  const [showFilters, setShowFilters]       = useState(false);
+  const [modal, setModal]                   = useState({ open: false, offer: null, amount: 0 });
+  const [toast, setToast]                   = useState(null);
 
   const walletBalance = homeData?.walletBalance ?? 0;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return offers;
-    return offers.filter((o) =>
-      (o.sellerName ?? '').toLowerCase().includes(q),
-    );
-  }, [offers, search]);
+    return offers.filter((o) => {
+      if (q && !((o.sellerName ?? '').toLowerCase().includes(q))) return false;
+      if (filterCity !== 'all' && o.sellerCity !== filterCity)    return false;
+      if (filterNeighborhood && o.sellerNeighborhood !== filterNeighborhood) return false;
+      return true;
+    });
+  }, [offers, search, filterCity, filterNeighborhood]);
+
+  const activeFilterCount =
+      (filterCity !== 'all' ? 1 : 0) + (filterNeighborhood ? 1 : 0);
+
+  function clearFilters() {
+    setFilterCity('all');
+    setFilterNeighborhood('');
+  }
 
   function showToast(msg, isError = false) {
     setToast({ msg, isError });
@@ -152,17 +177,101 @@ export default function BuyEnergy() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="ابحث عن منزل البائع..."
-          className="input-field pr-11"
-        />
-        <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+      {/* Search + Filter toggle */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ابحث عن منزل البائع..."
+            className="input-field pr-11"
+          />
+          <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+        </div>
+        <button
+          onClick={() => setShowFilters((s) => !s)}
+          className={`flex items-center gap-2 px-4 rounded-xl border transition-all flex-shrink-0
+            ${showFilters || activeFilterCount > 0
+              ? 'bg-solar-500/15 border-solar-500/40 text-solar-400'
+              : 'bg-dark-800 border-dark-700 text-gray-400 hover:border-dark-600'}`}
+        >
+          <FaFilter className="text-sm" />
+          <span className="text-sm font-semibold hidden sm:inline">فلترة</span>
+          {activeFilterCount > 0 && (
+            <span className="bg-solar-500 text-dark-900 text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
+
+      {/* Filters panel */}
+      {showFilters && (
+        <div className="card border-solar-500/20 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-white font-semibold flex items-center gap-2">
+              <FaMapMarkerAlt className="text-solar-400 text-sm" />
+              <span>الفلاتر الجغرافية</span>
+            </h3>
+            {activeFilterCount > 0 && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"
+              >
+                <FaTimes className="text-[10px]" />
+                <span>مسح الكل</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* City filter */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5 text-right">المدينة</label>
+              <select
+                value={filterCity}
+                onChange={(e) => { setFilterCity(e.target.value); setFilterNeighborhood(''); }}
+                className="input-field appearance-none cursor-pointer"
+                dir="rtl"
+              >
+                <option value="all" className="bg-dark-900">جميع المدن</option>
+                {LIBYAN_CITIES.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-dark-900">
+                    {c.nameAr}{c.isPrimary ? ' ⭐' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Neighborhood filter — only when city is selected */}
+            <div>
+              <label className="block text-xs text-gray-400 mb-1.5 text-right">الحي</label>
+              <select
+                value={filterNeighborhood}
+                onChange={(e) => setFilterNeighborhood(e.target.value)}
+                disabled={filterCity === 'all'}
+                className="input-field appearance-none cursor-pointer disabled:opacity-40"
+                dir="rtl"
+              >
+                <option value="" className="bg-dark-900">
+                  {filterCity === 'all' ? 'اختر مدينة أولاً' : 'جميع الأحياء'}
+                </option>
+                {filterCity !== 'all' && getCityNeighborhoods(filterCity).map((n) => (
+                  <option key={n} value={n} className="bg-dark-900">{n}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {activeFilterCount > 0 && (
+            <p className="text-xs text-solar-400 text-right">
+              🔍 يعرض {filtered.length} عرض في {filterCity !== 'all' ? getCity(filterCity).nameAr : 'كل المدن'}
+              {filterNeighborhood && ` — ${filterNeighborhood}`}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Offers Grid */}
       {loading && (
@@ -174,8 +283,24 @@ export default function BuyEnergy() {
       {!loading && filtered.length === 0 && (
         <div className="card flex flex-col items-center justify-center py-12 text-center">
           <FaInbox className="text-4xl text-gray-700 mb-3" />
-          <p className="text-gray-400 mb-1">لا توجد عروض متاحة حالياً</p>
-          <p className="text-gray-600 text-xs">عُد لاحقاً لمراجعة العروض الجديدة من الجيران.</p>
+          <p className="text-gray-400 mb-1">
+            {activeFilterCount > 0 || search
+              ? 'لا توجد عروض مطابقة للفلاتر'
+              : 'لا توجد عروض متاحة حالياً'}
+          </p>
+          <p className="text-gray-600 text-xs mb-3">
+            {activeFilterCount > 0 || search
+              ? 'جرّب مسح الفلاتر لعرض جميع العروض المتاحة.'
+              : 'عُد لاحقاً لمراجعة العروض الجديدة من الجيران.'}
+          </p>
+          {(activeFilterCount > 0 || search) && (
+            <button
+              onClick={() => { clearFilters(); setSearch(''); }}
+              className="text-solar-400 hover:text-solar-300 text-xs font-semibold"
+            >
+              مسح جميع الفلاتر
+            </button>
+          )}
         </div>
       )}
 

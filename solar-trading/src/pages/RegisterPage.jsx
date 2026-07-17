@@ -7,6 +7,7 @@ import {
 import { registerHome } from '../services/homeService';
 import { isValidLibyanMobile } from '../utils/meter';
 import { PAYMENT_METHODS } from '../utils/paymentMethods';
+import LocationPicker from '../components/LocationPicker';
 
 const ARABIC_ERRORS = {
   'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل.',
@@ -28,6 +29,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
   const [paymentMethod, setPaymentMethod] = useState('sadad');
+  const [city, setCity]                 = useState('ajdabiya');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [street, setStreet]             = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
@@ -45,7 +49,10 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { meterRef } = await registerHome({ name, email, mobile, password, paymentMethod });
+      const { meterRef } = await registerHome({
+        name, email, mobile, password, paymentMethod,
+        city, neighborhood, street,
+      });
       // Account created + signed in; AuthContext picks up the new user.
       navigate('/dashboard', { replace: true, state: { welcome: true, meterRef } });
     } catch (err) {
@@ -161,6 +168,20 @@ export default function RegisterPage() {
                 />
                 <FaLock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
               </div>
+            </div>
+
+            {/* Location */}
+            <div className="pt-2 border-t border-dark-700">
+              <p className="text-sm font-semibold text-solar-400 mb-3 text-right">📍 موقع المنزل</p>
+              <LocationPicker
+                city={city}
+                neighborhood={neighborhood}
+                street={street}
+                onCityChange={setCity}
+                onNeighborhoodChange={setNeighborhood}
+                onStreetChange={setStreet}
+                disabled={loading}
+              />
             </div>
 
             {/* Payment method */}
