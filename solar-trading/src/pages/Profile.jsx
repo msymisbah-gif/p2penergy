@@ -8,12 +8,14 @@ import {
   FaSolarPanel, FaCog, FaSignOutAlt, FaSpinner, FaBolt,
   FaSun, FaChartLine, FaFlask, FaPhone, FaTachometerAlt,
   FaEdit, FaSave, FaTimes, FaWallet, FaPlus, FaShieldAlt,
+  FaCreditCard,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { simulateDay, SOLAR_CONSTANTS } from '../services/productionService';
 import { updateHomeProfile, topUpWallet } from '../services/homeService';
 import { isValidLibyanMobile } from '../utils/meter';
+import { PAYMENT_METHODS, getPaymentMethod } from '../utils/paymentMethods';
 import { formatLYD, formatKwh, formatDate, getAvatarColor, getInitial } from '../utils/format';
 
 function InfoRow({ icon: Icon, label, value }) {
@@ -55,6 +57,7 @@ export default function Profile() {
   const [selectedAmt, setSelectedAmt]   = useState(null);
   const [customAmt, setCustomAmt]       = useState('');
   const [topping, setTopping]           = useState(false);
+  const [topUpMethod, setTopUpMethod]   = useState(homeData?.paymentMethod ?? 'sadad');
 
   if (!homeData) return null;
 
@@ -155,10 +158,11 @@ export default function Profile() {
       return showToast('أدخل مبلغاً بين 1 و 1000 د.ل.', true);
     setTopping(true);
     try {
-      await topUpWallet(currentUser.uid, amt);
+      await topUpWallet(currentUser.uid, amt, topUpMethod);
       setSelectedAmt(null);
       setCustomAmt('');
-      showToast(`تم شحن المحفظة بـ ${formatLYD(amt)} بنجاح!`);
+      const methodName = getPaymentMethod(topUpMethod).nameAr;
+      showToast(`تم شحن المحفظة بـ ${formatLYD(amt)} عبر ${methodName} بنجاح!`);
     } catch (err) {
       showToast(err.message || 'فشل الشحن. حاول مجدداً.', true);
     } finally {
@@ -214,6 +218,16 @@ export default function Profile() {
             <InfoRow icon={FaEnvelope}      label="البريد الإلكتروني"   value={currentUser?.email ?? '—'} />
             <InfoRow icon={FaPhone}         label="رقم الهاتف"          value={homeData.mobile || '—'} />
             <InfoRow icon={FaTachometerAlt} label="الرقم المرجعي للعداد" value={homeData.meterRef || '—'} />
+            <InfoRow
+              icon={FaCreditCard}
+              label="طريقة الدفع المفضلة"
+              value={
+                <span className="flex items-center gap-1.5">
+                  <span>{getPaymentMethod(homeData.paymentMethod).icon}</span>
+                  <span>{getPaymentMethod(homeData.paymentMethod).nameAr}</span>
+                </span>
+              }
+            />
             <InfoRow icon={FaCalendarAlt}   label="تاريخ الانضمام"      value={joinedAt} />
             <InfoRow
               icon={FaCheckCircle}
@@ -376,6 +390,34 @@ export default function Profile() {
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
             د.ل
           </span>
+        </div>
+
+        {/* Payment method selector */}
+        <div className="mb-4">
+          <label className="flex items-center gap-1.5 text-sm font-medium text-gray-400 mb-2 justify-end">
+            <span>طريقة الدفع</span>
+            <FaCreditCard className="text-green-400 text-xs" />
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {PAYMENT_METHODS.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setTopUpMethod(m.id)}
+                disabled={topping}
+                className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all
+                  ${topUpMethod === m.id
+                    ? `${m.bgColor} border-current ${m.color}`
+                    : 'bg-dark-900 border-dark-700 text-gray-400 hover:border-dark-600'}`}
+              >
+                <span className="text-xl">{m.icon}</span>
+                <span className={`text-[11px] font-semibold text-center leading-tight
+                  ${topUpMethod === m.id ? m.color : 'text-white'}`}>
+                  {m.nameAr}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         <button

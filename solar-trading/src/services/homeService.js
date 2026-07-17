@@ -16,7 +16,7 @@ const STARTING_WALLET = 100; // LYD
  * signs them in) and writes the /homes/{uid} document with the full
  * schema plus mobile + auto-generated meter reference.
  */
-export async function registerHome({ name, email, mobile, password }) {
+export async function registerHome({ name, email, mobile, password, paymentMethod = 'sadad' }) {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const uid  = cred.user.uid;
 
@@ -27,6 +27,7 @@ export async function registerHome({ name, email, mobile, password }) {
     ownerEmail:     email.trim(),
     mobile:         normalizeMobile(mobile),
     meterRef,
+    paymentMethod,
     balance:        0,
     walletBalance:  STARTING_WALLET,
     totalProduced:  0,
@@ -43,11 +44,14 @@ export async function registerHome({ name, email, mobile, password }) {
 /**
  * Add LYD credit to the user's wallet (virtual top-up for demo purposes).
  */
-export async function topUpWallet(uid, amount) {
+export async function topUpWallet(uid, amount, paymentMethod = 'sadad') {
   if (!amount || amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر.');
   await updateDoc(doc(db, 'homes', uid), {
-    walletBalance: increment(amount),
-    updatedAt:     serverTimestamp(),
+    walletBalance:     increment(amount),
+    lastTopUpAmount:   amount,
+    lastTopUpMethod:   paymentMethod,
+    lastTopUpAt:       serverTimestamp(),
+    updatedAt:         serverTimestamp(),
   });
 }
 

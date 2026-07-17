@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import StatsCard          from '../components/StatsCard';
 import EnergyChart        from '../components/EnergyChart';
 import RecentTransactions from '../components/RecentTransactions';
+import MarketExamples     from '../components/MarketExamples';
 import {
   FaBolt, FaSolarPanel, FaArrowUp, FaArrowDown,
   FaSun, FaMoon, FaWallet,
@@ -118,6 +119,9 @@ export default function Dashboard() {
 
       {/* Chart — full width */}
       <EnergyChart />
+
+      {/* Market examples — sell + buy previews */}
+      <MarketExamples />
 
       {/* Transactions */}
       <RecentTransactions />

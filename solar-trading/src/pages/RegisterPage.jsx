@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   FaSolarPanel, FaEnvelope, FaLock, FaSpinner, FaHome, FaPhone, FaArrowRight,
+  FaCreditCard,
 } from 'react-icons/fa';
 import { registerHome } from '../services/homeService';
 import { isValidLibyanMobile } from '../utils/meter';
+import { PAYMENT_METHODS } from '../utils/paymentMethods';
 
 const ARABIC_ERRORS = {
   'auth/email-already-in-use': 'هذا البريد الإلكتروني مستخدم بالفعل.',
@@ -25,6 +27,7 @@ export default function RegisterPage() {
   const [mobile, setMobile]     = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('sadad');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
 
@@ -42,7 +45,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const { meterRef } = await registerHome({ name, email, mobile, password });
+      const { meterRef } = await registerHome({ name, email, mobile, password, paymentMethod });
       // Account created + signed in; AuthContext picks up the new user.
       navigate('/dashboard', { replace: true, state: { welcome: true, meterRef } });
     } catch (err) {
@@ -157,6 +160,41 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                 />
                 <FaLock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
+              </div>
+            </div>
+
+            {/* Payment method */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2 text-right flex items-center gap-1.5 justify-end">
+                <span>طريقة الدفع المفضلة</span>
+                <FaCreditCard className="text-solar-400 text-xs" />
+              </label>
+              <div className="grid grid-cols-1 gap-2">
+                {PAYMENT_METHODS.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(m.id)}
+                    disabled={loading}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-right
+                      ${paymentMethod === m.id
+                        ? `${m.bgColor} border-current ${m.color}`
+                        : 'bg-dark-900 border-dark-700 text-gray-400 hover:border-dark-600'}`}
+                  >
+                    <span className="text-2xl">{m.icon}</span>
+                    <div className="flex-1 text-right">
+                      <p className={`text-sm font-bold ${paymentMethod === m.id ? m.color : 'text-white'}`}>
+                        {m.nameAr}
+                      </p>
+                      <p className="text-xs text-gray-500">{m.description}</p>
+                    </div>
+                    {paymentMethod === m.id && (
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${m.color} border-current`}>
+                        <div className="w-2 h-2 rounded-full bg-current" />
+                      </div>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
 
